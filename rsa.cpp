@@ -6,6 +6,7 @@
 #include <ctype.h>
 #include <sstream>
 #include <math.h>
+#include <iomanip>
 
 #if !defined(UINT64_MAX)
     using uint64_t = unsigned long long;
@@ -89,31 +90,44 @@ namespace rsa
 	{
         std::string ciphertext;
         std::stringstream ss;
+        
+        // have padding of n digits. if n=77, 2 padding, print as hex
+        std::stringstream conv;
+        conv << n;
+        
         for(uint64_t c=0;c<plaintext.length();c++) {
-            ss << (uint64_t)pow(plaintext[c]-48,
-                                pub_key) % n
-               << " "; // space as delimeter
+            ss << std::hex << std::setfill('0')
+               << std::setw(conv.str().length())
+               << (uint64_t)pow(plaintext[c]-48,
+                                pub_key) % n;
         }
-        ss >> ciphertext;
+        ciphertext = ss.str();
         return ciphertext;
 	}
     
     std::string decrypt(std::string ciphertext, uint64_t n, uint64_t 
                         priv_key) {
         std::string plaintext = "";
-        std::stringstream ss;
-        size_t pos = 0;
-        while((pos = ciphertext.find(" ")) != std::string::npos) {
-            // ciphertext of single char
+        std::stringstream ss, conv, ss_plaintxt;
+        conv << n;
+        int c = conv.str().length();
+        // decrypt ciphertext of chars one by one
+        do {
+        // for(int c=conv.str().length();
+        //     c<ciphertext.length();c+=conv.str().length()) {
             uint64_t char_ct;
-            ss << ciphertext.substr(0, pos);
-            ss >> char_ct;
-            plaintext += (uint64_t)pow(char_ct, priv_key) % n;
+            ss << ciphertext.substr(0, c);
+            char_ct = strtoul(ss.str().c_str(),
+                              NULL, 16);
+            ss_plaintxt << std::dec
+                        << (uint64_t)pow(char_ct, priv_key) % n;
             
             // reset ss and delete used value from ciphertext
             ss.clear();
-            ciphertext.erase(0, pos+1);
-        }
+            ciphertext.erase(0, c+1);
+            c+=conv.str().length();
+        } while(c<ciphertext.length());
+        plaintext = ss_plaintxt.str();
         return plaintext;
     }
 };
@@ -145,6 +159,8 @@ int main() {
     // calculate Euler's totient since p and q are defined
     uint64_t eulers_totient = (p-1)*(q-1);
     n = q*p;
+
+    // get public key
     do {
         std::cout << "\ninput public key:\t";
         std::cin >> pubkey;
@@ -166,6 +182,8 @@ int main() {
                 std::cout << "\npublic key not usable";
         }
     } while(!pubkey_usable);
+
+    // get private key
     do {
         std::cout << "\ninput private key:\t";
         std::cin >> priv_key;
@@ -187,8 +205,25 @@ int main() {
                 std::cout << "\nprivate key not usable";
         }
     } while (!privkey_usable);
-    std::cout << "\ninput plaintext:\t";
-    std::cin >> plaintext;
-    ciphertext = rsa::encrypt(plaintext, n, pubkey);
-    std::cout << "ciphertext:\t" << ciphertext;
+    
+    // encrypt of decrypt
+    std::string choice;
+    std::cout << "\n(e)ncrypt or (d)ecrypt:\t";
+    std::cin >> choice;
+    if(choice == "e" || choice == "encrypt") {
+        std::cout << "\ninput plaintext:\t";
+        std::cin.ignore (std::numeric_limits<std::streamsize>::max(),
+                         '\n'); 
+
+        std::getline(std::cin, plaintext);
+        ciphertext = rsa::encrypt(plaintext, n, pubkey);
+        std::cout << "\nciphertext:\t" << ciphertext << std::endl;
+    } else if(choice == "d" || choice == "decrypt") {
+        std::string ciphertext;
+        std::string plaintext;
+        std::cout << "\ninput ciphertext:\t";
+        std::cin >> ciphertext;
+        plaintext = rsa::decrypt(ciphertext, n, priv_key);
+        std::cout << "\nplaintext:\t " << plaintext << std::endl;
+    }
 }
