@@ -116,23 +116,16 @@ namespace rsa
         std::string plaintext = "";
         std::stringstream ss, conv, ss_plaintxt;
         conv << n;
-        int c = conv.str().length();
-        
-        // decrypt ciphertext of chars one by one
-        do {
-            uint64_t char_ct;
-            ss << ciphertext.substr(0, c);
-            char_ct = strtoul(ss.str().c_str(),
-                              NULL, 16);
+        for(int c=0;c<ciphertext.length()/conv.str().length();c++) {
+            ss << std::hex << ciphertext.substr(c*2,c*2+2);
             ss_plaintxt << std::dec
-                        << (uint64_t)pow(char_ct, priv_key) % n;
-            std::cout << ss_plaintxt.str() << "\n" << char_ct << "  ";
-            
-            // reset ss and delete used value from ciphertext
-            ss.str(std::string());
-            ciphertext.erase(0, c+1);
-            c+=conv.str().length();
-        } while(c<=ciphertext.length());
+                        << (uint64_t)pow(strtoul(ss.str().c_str(),
+                                                 NULL, 10), 
+                                         priv_key) % n;
+            std::cout << pow(strtoul(ss.str().c_str(), NULL, 10),
+                             priv_key);
+            ss.str(std::string()); // reset ss
+        }
         plaintext = ss_plaintxt.str();
         return plaintext;
     }
