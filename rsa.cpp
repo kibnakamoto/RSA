@@ -37,6 +37,12 @@ namespace rsa
                         break;
                     }
                 }
+            } else {
+                // if loop ended and no public key found
+                // generate new starting value
+                if(c == eulers_totient-1) {
+                    c = distr(generator);
+                }
             }
         }
         
@@ -111,22 +117,22 @@ namespace rsa
         std::stringstream ss, conv, ss_plaintxt;
         conv << n;
         int c = conv.str().length();
+        
         // decrypt ciphertext of chars one by one
         do {
-        // for(int c=conv.str().length();
-        //     c<ciphertext.length();c+=conv.str().length()) {
             uint64_t char_ct;
             ss << ciphertext.substr(0, c);
             char_ct = strtoul(ss.str().c_str(),
                               NULL, 16);
             ss_plaintxt << std::dec
                         << (uint64_t)pow(char_ct, priv_key) % n;
+            std::cout << ss_plaintxt.str() << "\n" << char_ct << "  ";
             
             // reset ss and delete used value from ciphertext
-            ss.clear();
+            ss.str(std::string());
             ciphertext.erase(0, c+1);
             c+=conv.str().length();
-        } while(c<ciphertext.length());
+        } while(c<=ciphertext.length());
         plaintext = ss_plaintxt.str();
         return plaintext;
     }
