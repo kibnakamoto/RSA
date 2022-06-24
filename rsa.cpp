@@ -118,12 +118,19 @@ namespace rsa
         conv << n;
         for(int c=0;c<ciphertext.length()/conv.str().length();c++) {
             ss << std::hex << ciphertext.substr(c*2,c*2+2);
+            uint64_t temp;
+            for(int i=0;i<priv_key;i++) {
+            temp = 0;
+            temp+=(uint64_t)pow(strtoul(ss.str().c_str(),
+                                         NULL, 10), 2);
+            temp%=n;
+            }
             ss_plaintxt << std::dec
-                        << (uint64_t)pow(strtoul(ss.str().c_str(),
-                                                 NULL, 10), 
-                                         priv_key) % n;
-            std::cout << pow(strtoul(ss.str().c_str(), NULL, 10),
-                             priv_key);
+            //             << (uint64_t)pow(strtoul(ss.str().c_str(),
+            //                                      NULL, 10),
+            //                              priv_key) % n;
+                        << temp;
+
             ss.str(std::string()); // reset ss
         }
         plaintext = ss_plaintxt.str();
