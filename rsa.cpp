@@ -11,7 +11,8 @@
     using uint64_t = unsigned long long;
 #endif
 
-// use GNU Multiple Precision Arithmetic Library for implementing 2048-bit encryption
+// use GNU Multiple Precision Arithmetic Library for implementing 
+// 2048-bit encryption
 
 // Rivest Shamir & Adleman
 namespace rsa
@@ -89,8 +90,9 @@ namespace rsa
         std::string ciphertext;
         std::stringstream ss;
         for(uint64_t c=0;c<plaintext.length();c++) {
-            ss << (uint64_t)pow(plaintext[c], pub_key) % n
-               << " "; // empty string as delimeter
+            ss << (uint64_t)pow(plaintext[c]-48,
+                                pub_key) % n
+               << " "; // space as delimeter
         }
         ss >> ciphertext;
         return ciphertext;
@@ -153,11 +155,13 @@ int main() {
             std::cin.ignore(std::numeric_limits
                             <std::streamsize>::max(), '\n');
             pubkey = rsa::gen_pub_key(eulers_totient,p,q);
-            std::cout << "\npubkey:\t" << std::dec << pubkey << std::endl;
+            std::cout << "\npubkey:\t" << std::dec << pubkey
+                      << std::endl;
             pubkey_usable = true;
         } else {
             // verify public key for RSA use
-            pubkey_usable = rsa::verify_pubkey_use(pubkey,eulers_totient);
+            pubkey_usable = rsa::verify_pubkey_use(pubkey,
+                                                   eulers_totient);
             if(!pubkey_usable)
                 std::cout << "\npublic key not usable";
         }
@@ -177,7 +181,8 @@ int main() {
             privkey_usable = true;
         } else {
             privkey_usable = rsa::verify_priv_key_use(eulers_totient, 
-                                                      pubkey, priv_key, n);
+                                                      pubkey,
+                                                      priv_key, n);
             if(!privkey_usable)
                 std::cout << "\nprivate key not usable";
         }
